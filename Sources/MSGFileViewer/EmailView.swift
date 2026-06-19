@@ -12,30 +12,69 @@ struct EmailView: View {
     var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Loading email…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                loadingView
             } else if let error = viewModel.error {
-                VStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.largeTitle)
-                        .foregroundColor(.red)
-                    Text("Error")
-                        .font(.headline)
-                    Text(error.localizedDescription)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
+                errorView(error: error)
             } else if let email = viewModel.email {
                 emailContentView(email: email)
             } else {
-                Text("Open a .msg file to view its contents.")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                emptyStateView
             }
         }
+    }
+
+    // MARK: - Loading State
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("Loading email…")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    // MARK: - Error State
+
+    private func errorView(error: Error) -> some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.1))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.red)
+            }
+            Text("Unable to Open File")
+                .font(.system(size: 15, weight: .semibold))
+            Text(error.localizedDescription)
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 320)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "envelope.open")
+                .font(.system(size: 32))
+                .foregroundColor(.secondary.opacity(0.6))
+            Text("Open a .msg file to view its contents.")
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .controlBackgroundColor))
     }
 
     // MARK: - Email Content
@@ -43,14 +82,14 @@ struct EmailView: View {
     @ViewBuilder
     private func emailContentView(email: Email) -> some View {
         VStack(spacing: 0) {
-            // Metadata section (scrollable if needed, but compact)
+            // Metadata section
             ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
-                    metadataSection(email: email)
-                }
-                .padding()
+                metadataSection(email: email)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
             }
-            .frame(maxHeight: 200)  // Cap metadata height
+            .frame(maxHeight: 220)
+            .background(Color(nsColor: .controlBackgroundColor))
 
             Divider()
 
@@ -72,56 +111,49 @@ struct EmailView: View {
 
     @ViewBuilder
     private func metadataSection(email: Email) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Subject
+        VStack(alignment: .leading, spacing: 14) {
+            // Subject - prominent
             Text(email.subject ?? "No Subject")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.primary)
                 .lineLimit(3)
-            
-            // Metadata grid with labels
-            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
-                GridRow {
-                    Text("From")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .frame(width: 50, alignment: .trailing)
-                    Text(formattedSender(name: email.senderName, email: email.senderEmail))
-                        .font(.subheadline)
-                        .textSelection(.enabled)
-                }
-                
-                GridRow {
-                    Text("To")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .frame(width: 50, alignment: .trailing)
-                    Text(formattedRecipients(email.toRecipients))
-                        .font(.subheadline)
-                        .textSelection(.enabled)
-                }
-                
+                .textSelection(.enabled)
+
+            // Metadata rows
+            VStack(alignment: .leading, spacing: 10) {
+                metadataRow(label: "From", value: formattedSender(name: email.senderName, email: email.senderEmail), color: .blue)
+
+                metadataRow(label: "To", value: formattedRecipients(email.toRecipients), color: .green)
+
                 if !email.ccRecipients.isEmpty {
-                    GridRow {
-                        Text("CC")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .frame(width: 50, alignment: .trailing)
-                        Text(formattedRecipients(email.ccRecipients))
-                            .font(.subheadline)
-                            .textSelection(.enabled)
-                    }
+                    metadataRow(label: "CC", value: formattedRecipients(email.ccRecipients), color: .orange)
                 }
-                
-                GridRow {
-                    Text("Date")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .frame(width: 50, alignment: .trailing)
-                    Text(formattedDate(email.sentDate))
-                        .font(.subheadline)
-                }
+
+                metadataRow(label: "Date", value: formattedDate(email.sentDate), color: .purple)
             }
+        }
+    }
+
+    // MARK: - Metadata Row with Badge
+
+    private func metadataRow(label: String, value: String, color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(color.opacity(0.9))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(color.opacity(0.1))
+                )
+                .frame(width: 56, alignment: .center)
+
+            Text(value)
+                .font(.system(size: 13))
+                .foregroundColor(.primary)
+                .textSelection(.enabled)
+                .lineLimit(3)
         }
     }
 

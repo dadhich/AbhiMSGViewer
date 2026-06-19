@@ -29,7 +29,7 @@ let package = Package(
             name: "MSGFileViewer",
             dependencies: ["MSGParser"],
             path: "Sources/MSGFileViewer",
-            exclude: ["Info.plist", "MSGFileViewer.entitlements"]
+            exclude: ["Info.plist", "MSGFileViewer.entitlements", "AppIcon.icns"]
         ),
         .testTarget(
             name: "MSGParserTests",

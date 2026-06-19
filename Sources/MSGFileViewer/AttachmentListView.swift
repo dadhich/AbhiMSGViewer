@@ -15,29 +15,41 @@ struct AttachmentListView: View {
 
     var body: some View {
         if !attachments.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
+            VStack(alignment: .leading, spacing: 10) {
+                // Header
+                HStack(spacing: 8) {
                     Image(systemName: "paperclip")
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.accentColor)
                     Text("Attachments")
-                        .font(.headline)
-                    Text("(\(attachments.count))")
-                        .font(.subheadline)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Text("\(attachments.count)")
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(Color.secondary.opacity(0.12))
+                        )
+                    Spacer()
                 }
-                .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
 
+                // Attachment cards
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         ForEach(attachments) { attachment in
                             AttachmentCard(attachment: attachment, onSave: onSave)
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 10)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
                 }
             }
+            .background(Color(nsColor: .controlBackgroundColor))
         }
     }
 }
@@ -48,31 +60,44 @@ struct AttachmentCard: View {
     @State private var isHovering = false
 
     var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: iconForAttachment(attachment))
-                .font(.title2)
-                .foregroundColor(attachment.isCorrupted ? .red : .accentColor)
-            
+        VStack(spacing: 8) {
+            // File type icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(iconBackgroundColor.opacity(0.12))
+                    .frame(width: 40, height: 40)
+                Image(systemName: iconForAttachment(attachment))
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(attachment.isCorrupted ? .red : iconBackgroundColor)
+            }
+
+            // Filename
             Text(attachment.filename)
-                .font(.caption)
+                .font(.system(size: 11, weight: .medium))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(width: 100)
-            
+                .foregroundColor(.primary)
+
+            // File size
             Text(attachment.formattedSize)
-                .font(.caption2)
+                .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
-        .padding(10)
-        .frame(width: 120, height: 100)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
+        .frame(width: 128, height: 110)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isHovering ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.05))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isHovering ? Color.accentColor.opacity(0.06) : Color(nsColor: .controlBackgroundColor))
+                .shadow(color: .black.opacity(isHovering ? 0.1 : 0.05), radius: isHovering ? 6 : 3, x: 0, y: isHovering ? 3 : 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isHovering ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.12), lineWidth: 1)
         )
+        .scaleEffect(isHovering ? 1.03 : 1.0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isHovering)
         .onHover { hovering in
             isHovering = hovering
         }
@@ -83,19 +108,36 @@ struct AttachmentCard: View {
         }
         .help(attachment.isCorrupted ? "Attachment is corrupted" : "Click to save \(attachment.filename)")
     }
-    
+
+    // MARK: - Icon Helpers
+
+    private var iconBackgroundColor: Color {
+        let ext = (attachment.filename as NSString).pathExtension.lowercased()
+        switch ext {
+        case "pdf": return .red
+        case "doc", "docx": return .blue
+        case "xls", "xlsx": return .green
+        case "ppt", "pptx": return .orange
+        case "jpg", "jpeg", "png", "gif", "bmp": return .purple
+        case "zip", "rar", "7z": return .brown
+        case "txt": return .gray
+        case "msg": return .cyan
+        default: return .accentColor
+        }
+    }
+
     private func iconForAttachment(_ attachment: Attachment) -> String {
         let ext = (attachment.filename as NSString).pathExtension.lowercased()
         switch ext {
-        case "pdf": return "doc.richtext"
-        case "doc", "docx": return "doc.text"
-        case "xls", "xlsx": return "tablecells"
-        case "ppt", "pptx": return "rectangle.stack"
-        case "jpg", "jpeg", "png", "gif", "bmp": return "photo"
-        case "zip", "rar", "7z": return "archivebox"
-        case "txt": return "doc.plaintext"
-        case "msg": return "envelope"
-        default: return "doc"
+        case "pdf": return "doc.richtext.fill"
+        case "doc", "docx": return "doc.text.fill"
+        case "xls", "xlsx": return "tablecells.fill"
+        case "ppt", "pptx": return "rectangle.stack.fill"
+        case "jpg", "jpeg", "png", "gif", "bmp": return "photo.fill"
+        case "zip", "rar", "7z": return "archivebox.fill"
+        case "txt": return "doc.plaintext.fill"
+        case "msg": return "envelope.fill"
+        default: return "doc.fill"
         }
     }
 }

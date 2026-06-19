@@ -49,6 +49,8 @@ cat > "${APP_DIR}/Contents/Info.plist" << EOF
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
@@ -91,6 +93,11 @@ cat > "${APP_DIR}/Contents/Info.plist" << EOF
 </dict>
 </plist>
 EOF
+
+# Copy app icon
+if [ -f "Sources/MSGFileViewer/AppIcon.icns" ]; then
+    cp "Sources/MSGFileViewer/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+fi
 
 # Create PkgInfo
 echo -n "APPL????" > "${APP_DIR}/Contents/PkgInfo"
