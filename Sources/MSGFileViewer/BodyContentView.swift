@@ -14,14 +14,21 @@ struct BodyContentView: View {
         VStack(spacing: 0) {
             // Format toggle (Picker) when multiple formats available
             if availableFormats.count > 1 {
-                Picker("Format", selection: $selectedFormat) {
-                    ForEach(availableFormats, id: \.self) { format in
-                        Text(format.rawValue).tag(format)
+                HStack {
+                    Text("Format")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Picker("", selection: $selectedFormat) {
+                        ForEach(availableFormats, id: \.self) { format in
+                            Text(format.rawValue).tag(format)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 300)
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.05))
             }
 
             // Content display

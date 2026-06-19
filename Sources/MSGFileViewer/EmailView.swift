@@ -72,43 +72,55 @@ struct EmailView: View {
 
     @ViewBuilder
     private func metadataSection(email: Email) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             // Subject
             Text(email.subject ?? "No Subject")
-                .font(.title)
-
-            // Sender
-            HStack(spacing: 4) {
-                Text("From:")
-                    .fontWeight(.semibold)
-                Text(formattedSender(name: email.senderName, email: email.senderEmail))
-                    .foregroundColor(.secondary)
-            }
-
-            // To recipients
-            HStack(alignment: .top, spacing: 4) {
-                Text("To:")
-                    .fontWeight(.semibold)
-                Text(formattedRecipients(email.toRecipients))
-                    .foregroundColor(.secondary)
-            }
-
-            // CC recipients (hidden if empty)
-            if !email.ccRecipients.isEmpty {
-                HStack(alignment: .top, spacing: 4) {
-                    Text("CC:")
-                        .fontWeight(.semibold)
-                    Text(formattedRecipients(email.ccRecipients))
+                .font(.title2)
+                .fontWeight(.semibold)
+                .lineLimit(3)
+            
+            // Metadata grid with labels
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
+                GridRow {
+                    Text("From")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    Text(formattedSender(name: email.senderName, email: email.senderEmail))
+                        .font(.subheadline)
+                        .textSelection(.enabled)
                 }
-            }
-
-            // Sent date
-            HStack(spacing: 4) {
-                Text("Date:")
-                    .fontWeight(.semibold)
-                Text(formattedDate(email.sentDate))
-                    .foregroundColor(.secondary)
+                
+                GridRow {
+                    Text("To")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    Text(formattedRecipients(email.toRecipients))
+                        .font(.subheadline)
+                        .textSelection(.enabled)
+                }
+                
+                if !email.ccRecipients.isEmpty {
+                    GridRow {
+                        Text("CC")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .frame(width: 50, alignment: .trailing)
+                        Text(formattedRecipients(email.ccRecipients))
+                            .font(.subheadline)
+                            .textSelection(.enabled)
+                    }
+                }
+                
+                GridRow {
+                    Text("Date")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    Text(formattedDate(email.sentDate))
+                        .font(.subheadline)
+                }
             }
         }
     }

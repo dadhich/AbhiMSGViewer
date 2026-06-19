@@ -6,8 +6,8 @@ import MSGParser
 
 /// A view that displays the list of attachments for a parsed email.
 ///
-/// Shows each attachment's filename and formatted size, with a save button
-/// for non-corrupted attachments and a warning indicator for corrupted ones.
+/// Shows each attachment as a card with file-type icon, filename, and size.
+/// Cards are horizontally scrollable for compact layout.
 /// The entire section is hidden when the attachments array is empty.
 struct AttachmentListView: View {
     let attachments: [Attachment]
@@ -16,38 +16,86 @@ struct AttachmentListView: View {
     var body: some View {
         if !attachments.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Attachments (\(attachments.count))")
-                    .font(.headline)
+                HStack {
+                    Image(systemName: "paperclip")
+                        .foregroundColor(.secondary)
+                    Text("Attachments")
+                        .font(.headline)
+                    Text("(\(attachments.count))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
 
-                ForEach(attachments) { attachment in
-                    HStack {
-                        if attachment.isCorrupted {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                        } else {
-                            Image(systemName: "paperclip")
-                        }
-
-                        VStack(alignment: .leading) {
-                            Text(attachment.filename)
-                                .lineLimit(1)
-                            Text(attachment.formattedSize)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        if !attachment.isCorrupted {
-                            Button("Save") {
-                                onSave(attachment)
-                            }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(attachments) { attachment in
+                            AttachmentCard(attachment: attachment, onSave: onSave)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
                 }
             }
-            .padding()
+        }
+    }
+}
+
+struct AttachmentCard: View {
+    let attachment: Attachment
+    let onSave: (Attachment) -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: iconForAttachment(attachment))
+                .font(.title2)
+                .foregroundColor(attachment.isCorrupted ? .red : .accentColor)
+            
+            Text(attachment.filename)
+                .font(.caption)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 100)
+            
+            Text(attachment.formattedSize)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(10)
+        .frame(width: 120, height: 100)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovering ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+        )
+        .onHover { hovering in
+            isHovering = hovering
+        }
+        .onTapGesture {
+            if !attachment.isCorrupted {
+                onSave(attachment)
+            }
+        }
+        .help(attachment.isCorrupted ? "Attachment is corrupted" : "Click to save \(attachment.filename)")
+    }
+    
+    private func iconForAttachment(_ attachment: Attachment) -> String {
+        let ext = (attachment.filename as NSString).pathExtension.lowercased()
+        switch ext {
+        case "pdf": return "doc.richtext"
+        case "doc", "docx": return "doc.text"
+        case "xls", "xlsx": return "tablecells"
+        case "ppt", "pptx": return "rectangle.stack"
+        case "jpg", "jpeg", "png", "gif", "bmp": return "photo"
+        case "zip", "rar", "7z": return "archivebox"
+        case "txt": return "doc.plaintext"
+        case "msg": return "envelope"
+        default: return "doc"
         }
     }
 }
