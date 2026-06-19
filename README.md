@@ -1,6 +1,8 @@
 # MSG File Viewer
 
 A native macOS application for reading Microsoft Outlook `.msg` files completely offline. Built with Swift and SwiftUI.
+<img width="900" height="444" alt="image" src="https://github.com/user-attachments/assets/e1bd9054-c993-4d77-9e96-acd92074a0fa" />
+
 
 ## Requirements
 
